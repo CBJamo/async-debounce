@@ -1,17 +1,34 @@
 #![no_std]
 
-use embedded_hal::digital::{InputPin, PinState, ErrorType};
+use embedded_hal::digital::{InputPin, ErrorType};
 use embedded_hal_async::digital::Wait;
 use embassy_time::{Duration, Timer};
 
 pub struct Debouncer<T: Wait + InputPin> {
     input: T,
-    debounce_time: Duration,
+    debounce_high_time: Duration,
+    debounce_low_time: Duration,
 }
 
 impl<T: Wait + InputPin> Debouncer<T> {
     pub fn new(input: T, debounce_time: Duration) -> Self {
-        Self { input, debounce_time }
+        Self {
+            input,
+            debounce_high_time: debounce_time,
+            debounce_low_time: debounce_time,
+        }
+    }
+
+    pub fn new_asymmetric(
+        input: T,
+        debounce_high_time: Duration,
+        debounce_low_time: Duration,
+    ) -> Self {
+        Self {
+            input,
+            debounce_high_time,
+            debounce_low_time,
+        }
     }
 }
 
@@ -25,7 +42,7 @@ impl<T: Wait + InputPin> Wait for Debouncer<T> {
             loop {
                 self.input.wait_for_rising_edge().await?;
 
-                Timer::after(self.debounce_time).await;
+                Timer::after(self.debounce_high_time).await;
 
                 if self.input.is_high()? {
                     break;
@@ -40,7 +57,7 @@ impl<T: Wait + InputPin> Wait for Debouncer<T> {
             loop {
                 self.input.wait_for_falling_edge().await?;
 
-                Timer::after(self.debounce_time).await;
+                Timer::after(self.debounce_low_time).await;
 
                 if self.input.is_low()? {
                     break;
@@ -54,7 +71,7 @@ impl<T: Wait + InputPin> Wait for Debouncer<T> {
         loop {
             self.input.wait_for_rising_edge().await?;
 
-            Timer::after(self.debounce_time).await;
+            Timer::after(self.debounce_high_time).await;
 
             if self.input.is_high()? {
                 break Ok(());
@@ -66,7 +83,7 @@ impl<T: Wait + InputPin> Wait for Debouncer<T> {
         loop {
             self.input.wait_for_falling_edge().await?;
 
-            Timer::after(self.debounce_time).await;
+            Timer::after(self.debounce_low_time).await;
 
             if self.input.is_low()? {
                 break Ok(());
@@ -75,17 +92,10 @@ impl<T: Wait + InputPin> Wait for Debouncer<T> {
     }
 
     async fn wait_for_any_edge(&mut self) -> Result<(), T::Error> {
-        loop {
-            let l1: PinState = self.input.is_high()?.into();
-
-            self.input.wait_for_any_edge().await?;
-
-            Timer::after(self.debounce_time).await;
-
-            let l2: PinState = self.input.is_high()?.into();
-            if l1 != l2 {
-                break Ok(());
-            }
+        if self.input.is_low()? {
+            self.wait_for_rising_edge().await
+        } else {
+            self.wait_for_falling_edge().await
         }
     }
 

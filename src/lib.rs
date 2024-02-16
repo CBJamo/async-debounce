@@ -1,16 +1,16 @@
 #![no_std]
 
-use embedded_hal::digital::{InputPin, ErrorType};
-use embedded_hal_async::digital::Wait;
 use embassy_time::{Duration, Timer};
+use embedded_hal::digital::{ErrorType, InputPin};
+use embedded_hal_async::digital::Wait;
 
-pub struct Debouncer<T: Wait + InputPin> {
+pub struct Debouncer<T> {
     input: T,
     debounce_high_time: Duration,
     debounce_low_time: Duration,
 }
 
-impl<T: Wait + InputPin> Debouncer<T> {
+impl<T> Debouncer<T> {
     pub fn new(input: T, debounce_time: Duration) -> Self {
         Self {
             input,
@@ -32,7 +32,7 @@ impl<T: Wait + InputPin> Debouncer<T> {
     }
 }
 
-impl<T: Wait + InputPin> ErrorType for Debouncer<T> {
+impl<T: InputPin> ErrorType for Debouncer<T> {
     type Error = T::Error;
 }
 
@@ -98,10 +98,9 @@ impl<T: Wait + InputPin> Wait for Debouncer<T> {
             self.wait_for_falling_edge().await
         }
     }
-
 }
 
-impl<T: Wait + InputPin> InputPin for Debouncer<T> {
+impl<T: InputPin> InputPin for Debouncer<T> {
     #[inline]
     fn is_high(&mut self) -> Result<bool, Self::Error> {
         self.input.is_high()

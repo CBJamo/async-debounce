@@ -1,8 +1,8 @@
 #![no_std]
 
-use embedded_hal::digital::{InputPin, ErrorType};
-use embedded_hal_async::digital::Wait;
 use embassy_time::{Duration, Timer};
+use embedded_hal::digital::{ErrorType, InputPin};
+use embedded_hal_async::digital::Wait;
 
 pub struct Debouncer<T> {
     input: T,
@@ -98,7 +98,6 @@ impl<T: Wait + InputPin> Wait for Debouncer<T> {
             self.wait_for_falling_edge().await
         }
     }
-
 }
 
 impl<T: InputPin> InputPin for Debouncer<T> {

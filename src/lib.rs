@@ -100,3 +100,15 @@ impl<T: Wait + InputPin> Wait for Debouncer<T> {
     }
 
 }
+
+impl<T: Wait + InputPin> InputPin for Debouncer<T> {
+    #[inline]
+    fn is_high(&mut self) -> Result<bool, Self::Error> {
+        self.input.is_high()
+    }
+
+    #[inline]
+    fn is_low(&mut self) -> Result<bool, Self::Error> {
+        self.input.is_low()
+    }
+}

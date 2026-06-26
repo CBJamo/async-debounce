@@ -1,16 +1,22 @@
 [package]
 name = "async-debounce"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Caleb Jamison <caleb@cbjamo.com>"]
-description = "Debounce using embedded-hal and embedded-hal-async traits and embassy-time"
+description = "Debounce using embedded-hal and embedded-hal-async traits"
 repository = "https://github.com/CBJamo/async-debounce"
 license = "MIT OR Apache-2.0"
 keywords = ["async", "no_std", "IO", "debounce"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["embassy-time"]
+embassy-time = ["dep:embassy-time"]
+tokio = ["dep:tokio"]
+
 [dependencies]
 embedded-hal = "1.0.0"
 embedded-hal-async = "1.0.0"
-embassy-time = "0.5"
+embassy-time = { version = "0.5", optional = true }
+tokio = { version = "1", default-features = false, features = ["time"], optional = true }

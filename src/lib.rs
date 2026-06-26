@@ -1,6 +1,19 @@
-#![no_std]
+#![cfg_attr(not(feature = "tokio"), no_std)]
 
+#[cfg(all(feature = "embassy-time", feature = "tokio"))]
+compile_error!("features `embassy-time` and `tokio` are mutually exclusive");
+
+#[cfg(not(any(feature = "embassy-time", feature = "tokio")))]
+compile_error!("one of `embassy-time` or `tokio` must be enabled");
+
+#[cfg(feature = "embassy-time")]
 use embassy_time::{Duration, with_timeout};
+
+#[cfg(feature = "tokio")]
+use core::time::Duration;
+#[cfg(feature = "tokio")]
+use tokio::time::timeout as with_timeout;
+
 use embedded_hal::digital::{ErrorType, InputPin};
 use embedded_hal_async::digital::Wait;
 
